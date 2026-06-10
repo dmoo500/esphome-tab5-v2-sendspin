@@ -1,4 +1,6 @@
 #include "st7123_touchscreen.h"
+
+#include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
 
 namespace esphome {
@@ -6,47 +8,127 @@ namespace st7123 {
 
 static const char *const TAG = "st7123.touchscreen";
 
-static const uint8_t ST7123_ADDR_1 = 0x40;
-static const uint8_t ST7123_ADDR_2 = 0x41;
+// Registers
+static const uint16_t REG_GET_TOUCH_INFO = 0x0010;
+static const uint16_t REG_GET_TOUCH = 0x0014;
+static const uint16_t REG_GET_KEYS = 0x0013;
+static const uint16_t REG_GET_MAX_COORD = 0x0005;
+static const uint8_t MAX_TOUCHES = 10;
+static const uint8_t MAX_BUTTONS = 6;
+
+struct TouchData {
+  uint8_t x_h : 6;
+  uint8_t reserved_6 : 1;
+  uint8_t valid : 1;
+  uint8_t x_l;
+  uint8_t y_h : 6;
+  uint8_t reserved_6_7 : 2;
+  uint8_t y_l;
+  uint8_t area;
+  uint8_t intensity;
+  uint8_t reserved;
+};
+
+struct AdvInfo {
+  uint8_t reserved : 2;
+  uint8_t with_prox : 1;
+  uint8_t with_coord : 1;
+  uint8_t prox_status : 3;
+  uint8_t rst_chip : 1;
+};
+
+struct MaxCoordInfo {
+  uint8_t max_x_h : 6;
+  uint8_t reserved_x_7_8 : 2;
+  uint8_t max_x_l;
+  uint8_t max_y_h : 6;
+  uint8_t reserved_y_7_8 : 2;
+  uint8_t max_y_l;
+};
 
 void ST7123Touchscreen::setup() {
-  ESP_LOGCONFIG(TAG, "Setting up ST7123 Touchscreen...");
-  
   if (this->reset_pin_ != nullptr) {
     this->reset_pin_->setup();
-    this->reset_pin_->digital_write(false);
-    delay(10);
     this->reset_pin_->digital_write(true);
-    this->set_timeout(50, [this] { this->setup_internal_(); });
-  } else {
-    this->setup_internal_();
+    delay(5);
+    this->reset_pin_->digital_write(false);
+    delay(5);
+    this->reset_pin_->digital_write(true);
+    this->set_timeout(25, [this] { this->setup_internal_(); });
+    return;
   }
+  this->setup_internal_();
 }
 
 void ST7123Touchscreen::setup_internal_() {
   if (this->interrupt_pin_ != nullptr) {
     this->interrupt_pin_->setup();
-    this->interrupt_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
-  }
-
-  // Try both possible I2C addresses
-  if (!this->write_bytes(0, nullptr, 0)) {
-    ESP_LOGD(TAG, "Found ST7123 at address 0x%02X", this->address_);
-  } else {
-    // Try alternate address
-    uint8_t addr = (this->address_ == ST7123_ADDR_1) ? ST7123_ADDR_2 : ST7123_ADDR_1;
-    this->set_i2c_address(addr);
-    if (!this->write_bytes(0, nullptr, 0)) {
-      ESP_LOGD(TAG, "Found ST7123 at alternate address 0x%02X", addr);
-    } else {
-      ESP_LOGE(TAG, "Failed to communicate with ST7123");
-      this->mark_failed();
-      return;
-    }
+    this->attach_interrupt_(this->interrupt_pin_,
+                            gpio::INTERRUPT_RISING_EDGE);  // INTERRUPT_RISING_EDGE / INTERRUPT_FALLING_EDGE?
   }
 
   this->setup_done_ = true;
-  ESP_LOGCONFIG(TAG, "ST7123 setup complete");
+}
+
+void ST7123Touchscreen::setup_lazy_() {
+  MaxCoordInfo max_coord_info;
+  ESP_LOGD(TAG, "Reading max touch coordinates");
+  // no calibration? Attempt to read the max values from the touchscreen.
+  i2c::ErrorCode err = this->read_register16(REG_GET_MAX_COORD, (uint8_t *) &max_coord_info, sizeof(MaxCoordInfo));
+  if (err == i2c::ERROR_OK) {
+    this->x_raw_max_ = encode_uint16(max_coord_info.max_x_h, max_coord_info.max_x_l);
+    this->y_raw_max_ = encode_uint16(max_coord_info.max_y_h, max_coord_info.max_y_l);
+    ESP_LOGD(TAG, "Max Coord: %d %d", x_raw_max_, y_raw_max_);
+    if (this->swap_x_y_)
+      std::swap(this->x_raw_max_, this->y_raw_max_);
+  } else {
+    this->mark_failed(LOG_STR("Calibration error"));
+  }
+}
+
+void ST7123Touchscreen::update_touches() {
+  this->skip_update_ = true;  // skip send touch events by default, set to false after successful error checks
+  if (!this->setup_done_) {
+    return;
+  }
+  if (x_raw_max_ == 0 || y_raw_max_ == 0) {
+    setup_lazy_();
+  }
+  i2c::ErrorCode err;
+  TouchData touch_data[MAX_TOUCHES];
+  AdvInfo adv_info;
+
+  err = this->read_register16(REG_GET_TOUCH_INFO, (uint8_t *) &adv_info, 1);
+  if (err == i2c::ERROR_OK) {
+    if (adv_info.with_coord) {
+      err = this->read_register16(REG_GET_TOUCH, (uint8_t *) &touch_data[0], sizeof(TouchData) * MAX_TOUCHES);
+      if (err == i2c::ERROR_OK) {
+        for (auto &i : touch_data) {
+          if (!i.valid) {
+            continue;
+          }
+          uint16_t xpos = encode_uint16(i.x_h, i.x_l);
+          uint16_t ypos = encode_uint16(i.y_h, i.y_l);
+          uint16_t id = i.area;
+          this->add_raw_touch_position_(id, xpos, ypos);
+        }
+      }
+    }
+  }
+
+  uint8_t keys;
+  err = this->read_register16(REG_GET_KEYS, &keys, 1);
+  if (err == i2c::ERROR_OK) {
+    if (keys != this->button_state_) {
+      this->button_state_ = keys;
+      for (size_t i = 0; i != MAX_BUTTONS; i++) {
+        for (auto *listener : this->button_listeners_)
+          listener->update_button(i, (keys & (1 << i)) != 0);
+      }
+    }
+  }
+
+  this->skip_update_ = false;  // All error checks passed, send touch events
 }
 
 void ST7123Touchscreen::dump_config() {
@@ -54,51 +136,6 @@ void ST7123Touchscreen::dump_config() {
   LOG_I2C_DEVICE(this);
   LOG_PIN("  Interrupt Pin: ", this->interrupt_pin_);
   LOG_PIN("  Reset Pin: ", this->reset_pin_);
-  
-  if (this->is_failed()) {
-    ESP_LOGE(TAG, "  Setup failed!");
-  }
-}
-
-void ST7123Touchscreen::update_touches() {
-  uint8_t data[16];
-  
-  // Read touch data from device
-  if (!this->read_bytes_raw(data, 16)) {
-    ESP_LOGW(TAG, "Failed to read touch data");
-    return;
-  }
-
-  // Parse touch points
-  uint8_t num_touches = data[0] & 0x0F;
-  if (num_touches > 5) {
-    num_touches = 0;
-  }
-
-  for (uint8_t i = 0; i < num_touches; i++) {
-    uint8_t offset = 2 + (i * 6);
-    if (offset + 5 >= 16) break;
-
-    uint16_t x = ((data[offset] & 0x0F) << 8) | data[offset + 1];
-    uint16_t y = ((data[offset + 2] & 0x0F) << 8) | data[offset + 3];
-    uint8_t id = (data[offset + 4] >> 4) & 0x0F;
-
-    this->add_raw_touch_position_(id, x, y);
-  }
-
-  // Check for button state changes
-  if (data[1] != this->button_state_) {
-    for (auto *listener : this->button_listeners_) {
-      for (uint8_t i = 0; i < 8; i++) {
-        bool old_state = (this->button_state_ >> i) & 0x01;
-        bool new_state = (data[1] >> i) & 0x01;
-        if (old_state != new_state) {
-          listener->update_button(i, new_state);
-        }
-      }
-    }
-    this->button_state_ = data[1];
-  }
 }
 
 }  // namespace st7123

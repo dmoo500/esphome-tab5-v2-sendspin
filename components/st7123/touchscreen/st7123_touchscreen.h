@@ -18,11 +18,8 @@ class ST7123Touchscreen : public touchscreen::Touchscreen, public i2c::I2CDevice
   /// @brief Initialize the ST7123 touchscreen.
   ///
   /// If @ref reset_pin_ is set, the touchscreen will be hardware reset,
-  /// and the rest of the setup will be scheduled to run 50ms later using @ref set_timeout()
+  /// and the rest of the setup will be scheduled to run 25ms later using @ref set_timeout()
   /// to allow the device to stabilize after reset.
-  ///
-  /// If @ref interrupt_pin_ is set, it will be temporarily configured during reset
-  /// to control I2C address selection.
   ///
   /// After the timeout, or immediately if no reset is performed, @ref setup_internal_()
   /// is called to complete the initialization.
@@ -39,13 +36,13 @@ class ST7123Touchscreen : public touchscreen::Touchscreen, public i2c::I2CDevice
 
   /// @brief Perform the internal setup routine for the ST7123 touchscreen.
   ///
-  /// This function checks the I2C address, configures the interrupt pin (if available),
-  /// reads the touchscreen mode from the controller, and attempts to read calibration
-  /// data (maximum X and Y values) if not already set.
-  ///
   /// On success, sets @ref setup_done_ to true.
   /// On failure, calls @ref mark_failed() with an appropriate error message.
   void setup_internal_();
+  /// @brief Perform the late setup routine for the ST7123 touchscreen.
+  ///
+  /// This function reads the calibration data (maximum X and Y values) if not already set.
+  void setup_lazy_();
   /// @brief True if the touchscreen setup has completed successfully.
   bool setup_done_{false};
 

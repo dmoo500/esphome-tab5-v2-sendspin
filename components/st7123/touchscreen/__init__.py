@@ -1,12 +1,12 @@
-import esphome.codegen as cg
-import esphome.config_validation as cv
-from esphome.components import i2c, touchscreen
-from esphome.const import CONF_ID, CONF_INTERRUPT_PIN, CONF_RESET_PIN
 from esphome import pins
+import esphome.codegen as cg
+from esphome.components import i2c, touchscreen
+import esphome.config_validation as cv
+from esphome.const import CONF_ID, CONF_INTERRUPT_PIN, CONF_RESET_PIN
+
 from .. import st7123_ns
 
-DEPENDENCIES = ["i2c"]
-
+ST7123ButtonListener = st7123_ns.class_("ST7123ButtonListener")
 ST7123Touchscreen = st7123_ns.class_(
     "ST7123Touchscreen",
     touchscreen.Touchscreen,
@@ -16,10 +16,10 @@ ST7123Touchscreen = st7123_ns.class_(
 CONFIG_SCHEMA = touchscreen.TOUCHSCREEN_SCHEMA.extend(
     {
         cv.GenerateID(): cv.declare_id(ST7123Touchscreen),
-        cv.Required(CONF_INTERRUPT_PIN): pins.gpio_input_pin_schema,
-        cv.Required(CONF_RESET_PIN): pins.gpio_output_pin_schema,
+        cv.Optional(CONF_INTERRUPT_PIN): pins.internal_gpio_input_pin_schema,
+        cv.Optional(CONF_RESET_PIN): pins.gpio_output_pin_schema,
     }
-).extend(i2c.i2c_device_schema(0x24))
+).extend(i2c.i2c_device_schema(0x55))
 
 
 async def to_code(config):
@@ -27,8 +27,7 @@ async def to_code(config):
     await touchscreen.register_touchscreen(var, config)
     await i2c.register_i2c_device(var, config)
 
-    interrupt_pin = await cg.gpio_pin_expression(config[CONF_INTERRUPT_PIN])
-    cg.add(var.set_interrupt_pin(interrupt_pin))
-    
-    reset_pin = await cg.gpio_pin_expression(config[CONF_RESET_PIN])
-    cg.add(var.set_reset_pin(reset_pin))
+    if interrupt_pin := config.get(CONF_INTERRUPT_PIN):
+        cg.add(var.set_interrupt_pin(await cg.gpio_pin_expression(interrupt_pin)))
+    if reset_pin := config.get(CONF_RESET_PIN):
+        cg.add(var.set_reset_pin(await cg.gpio_pin_expression(reset_pin)))
