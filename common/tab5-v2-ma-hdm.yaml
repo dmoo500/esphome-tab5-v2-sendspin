@@ -35,6 +35,9 @@ esphome:
   name: ${name}
   friendly_name: ${friendly_name}
   min_version: 2025.12.0
+  platformio_options:
+    build_flags:
+      - "-j1"  # only 1 parallel job
   on_boot:
     priority: -100
     then:
@@ -55,10 +58,32 @@ esp32:
       CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_360: "y"
       CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ: "360"
 
-  remote_package_files:
-      url: https://github.com/dmpp500/esphome-tab5-v2-sendspin
-      files: [ ccommon/tab5-v2-globals.yaml, common/tab5-v2-fonts.yaml, common/tab5-v2-images.yaml, common/tab5-v2-lvgl.yaml, common/tab5-v2-scripts.yaml ]
-      refresh: 1d
+packages:
+  remote_globals:
+    url: https://github.com/dmoo500/esphome-tab5-v2-sendspin
+    file: common/tab5-v2-globals.yaml
+    ref: main
+    refresh: 1d
+  remote_fonts:
+    url: https://github.com/dmoo500/esphome-tab5-v2-sendspin
+    file: common/tab5-v2-fonts.yaml
+    ref: main
+    refresh: 1d
+  remote_images:
+    url: https://github.com/dmoo500/esphome-tab5-v2-sendspin
+    file: common/tab5-v2-images.yaml
+    ref: main
+    refresh: 1d
+  remote_lvgl:
+    url: https://github.com/dmoo500/esphome-tab5-v2-sendspin
+    file: common/tab5-v2-lvgl.yaml
+    ref: main
+    refresh: 1d
+  remote_scripts:
+    url: https://github.com/dmoo500/esphome-tab5-v2-sendspin
+    file: common/tab5-v2-scripts.yaml
+    ref: main
+    refresh: 1d
 
 esp32_hosted:
   variant: esp32c6
