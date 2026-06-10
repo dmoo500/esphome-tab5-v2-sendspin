@@ -25,9 +25,9 @@ substitutions:
   humidity_sensor: sensor.hmip_wth_1_003922699b2ba1_luftfeuchtigkeit
 
 external_components:
-  - source:
-      type: local
-      path: components
+  - source: github://dmoo500/esphome-tab5-v2-sendspin@main
+    components: [st7123]
+    refresh: 1d
   - source: github://pr#16057
     components: [generic_image, sendspin]
 
