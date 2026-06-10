@@ -16,7 +16,7 @@ CONFIG_SCHEMA = touchscreen.TOUCHSCREEN_SCHEMA.extend(
     {
         cv.GenerateID(): cv.declare_id(ST7123Touchscreen),
         cv.Required(CONF_INTERRUPT_PIN): cv.All(
-            cv.pins.internal_gpio_input_pin_schema
+            cv.gpio_input_pin_schema
         ),
     }
 ).extend(i2c.i2c_device_schema(0x24))
