@@ -394,7 +394,7 @@ lvgl:
                               # The RGB values are from global variables
                               # which comes from the indicator
                               rgb_color: !lambda |-
-                                return {id(light_r), id(light_g), id(light_b)};
+                                return std::vector<int>{id(light_r), id(light_g), id(light_b)};
 
                   # Indicator, also make it draggable
                   - obj:
@@ -419,7 +419,7 @@ lvgl:
                               # The RGB values are from global variables
                               # which comes from the indicator
                               rgb_color: !lambda |-
-                                return {id(light_r), id(light_g), id(light_b)};
+                                return std::vector<int>{id(light_r), id(light_g), id(light_b)};
  
                       
                   # Button group
