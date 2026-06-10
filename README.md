@@ -72,4 +72,9 @@ MIT
 
 ## Credits
 
-Based on ESPHome and leverages the Sendspin media player component.
+This project was inspired by and builds upon the excellent work of:
+
+- [M5Stack ESPHome YAML](https://github.com/m5stack/esphome-yaml) - Official M5Stack Tab5 configuration
+- [Sendspin Guition](https://github.com/RealDeco/sendspin-guition) - Sendspin media player implementation
+
+Thank you to the maintainers of these projects for their valuable contributions to the ESPHome community!
