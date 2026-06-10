@@ -51,6 +51,13 @@ esphome:
           id: set_ui_phase
           phase: ${ui_phase_standby}
       - script.execute: apply_accent_color_debounced
+      # Ensure speaker is enabled and DAC is configured
+      - switch.turn_on: speaker_enable
+      - delay: 500ms
+      - select.set:
+          id: es8388_dac_output_select
+          option: "LINE1"
+      - logger.log: "Audio initialized: Speaker enabled, DAC set to LINE1"
 esp32:
   board: esp32-p4-evboard
   flash_size: 16MB
@@ -269,12 +276,23 @@ binary_sensor:
     pin:
       pi4ioe5v6408: pi4ioe1
       number: 7
+    on_press:
+      - select.set:
+          id: es8388_dac_output_select
+          option: "BOTH"
+      - logger.log: "Headphones connected - DAC set to BOTH"
+    on_release:
+      - select.set:
+          id: es8388_dac_output_select
+          option: "LINE1"
+      - logger.log: "Headphones disconnected - DAC set to LINE1"
 
 select:
 # The DAC Output select needs to be manually 
 # (or with an automation) changed to `LINE1` for the onboard speaker
   - platform: es8388
     dac_output:
+      id: es8388_dac_output_select
       name: DAC Output
     adc_input_mic:
       name: ADC Input Mic
@@ -635,6 +653,9 @@ microphone:
 audio_dac:
   - platform: es8388
     id: es8388_dac
+    address: 0x10
+    bits_per_sample: 16bit
+    sample_rate: 48000
 
 speaker:
   - platform: i2s_audio
@@ -716,8 +737,9 @@ media_player:
         - http_media_source
         - sendspin_media_source
     volume_increment: 0.05
-    volume_min: 0.4
+    volume_min: 0.3
     volume_max: 0.85
+    initial_volume: 0.6
 
     on_play:
       then:
@@ -877,3 +899,12 @@ text_sensor:
           id: temp_spin_box
           value: !lambda |-
             return std::stof(x) * 10;
+      - lvgl.arc.update:
+          id: ac_arc
+          value: !lambda |-
+            return std::stof(x) * 10;
+      - lvgl.label.update:
+          id: ac_temp_label
+          text:
+            format: "%.1f °C"
+            args: [ 'std::stof(x)' ]

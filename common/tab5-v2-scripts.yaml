@@ -348,55 +348,77 @@ script:
       color_str: string
     then:
       - lambda: |-
+          ESP_LOGD("sync_ha_palette", "Received color string: %s", color_str.c_str());
+          
           if (color_str.empty() || color_str == "None" 
               || color_str == "null" || color_str == "unknown" 
               || color_str == "unavailable" ) {
+            ESP_LOGD("sync_ha_palette", "Color unavailable, resetting to white");
             lv_obj_set_pos(id(color_palette_indicator), 0, 0);
             lv_obj_set_style_bg_color(id(color_palette_indicator), lv_color_hex(0xFFFFFF), LV_STATE_DEFAULT);
             lv_obj_set_style_bg_color(id(light_slider), lv_color_hex(0xECECEC), LV_PART_MAIN);
             return;
           }
-          int r, g, b;
-          // remove '(' and ')' in string, obtain r, g, b value
-          color_str.erase(std::remove(color_str.begin(), color_str.end(), '('), color_str.end());
-          color_str.erase(std::remove(color_str.begin(), color_str.end(), ')'), color_str.end());
-          sscanf(color_str.c_str(), "%d,%d,%d", &r, &g, &b);
-          lv_color_t update_color = lv_color_make(r, g, b);
-          lv_color_hsv_t hsv = lv_color_rgb_to_hsv(r, g, b);
-          int radius = 160;
-
-          float rad = hsv.h * M_PI / 180.0f;
-          float s = hsv.s / 100.0f;
-
-          int x = (int)(cosf(rad) * s * radius);
-          int y = (int)(sinf(rad) * s * radius);
-
-          lv_obj_set_pos(id(color_palette_indicator), x, y);
-          // Set the indicator's background color
-          lv_obj_set_style_bg_color(id(color_palette_indicator), update_color, LV_STATE_DEFAULT);
           
-          // Give the slider proper color like in the Home Assistant
-          float brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+          int r = 255, g = 255, b = 255;
+          
+          // Try parsing formats: "(r, g, b)" or "[r, g, b]" or "r, g, b"
+          std::string clean = color_str;
+          // Remove brackets and parentheses
+          clean.erase(std::remove(clean.begin(), clean.end(), '('), clean.end());
+          clean.erase(std::remove(clean.begin(), clean.end(), ')'), clean.end());
+          clean.erase(std::remove(clean.begin(), clean.end(), '['), clean.end());
+          clean.erase(std::remove(clean.begin(), clean.end(), ']'), clean.end());
+          
+          // Try parsing "r, g, b" format
+          if (sscanf(clean.c_str(), "%d, %d, %d", &r, &g, &b) == 3 ||
+              sscanf(clean.c_str(), "%d,%d,%d", &r, &g, &b) == 3) {
+            ESP_LOGD("sync_ha_palette", "Parsed RGB: %d, %d, %d", r, g, b);
+            
+            // Clamp values to 0-255
+            r = std::max(0, std::min(255, r));
+            g = std::max(0, std::min(255, g));
+            b = std::max(0, std::min(255, b));
+            
+            lv_color_t update_color = lv_color_make(r, g, b);
+            lv_color_hsv_t hsv = lv_color_rgb_to_hsv(r, g, b);
+            int radius = 160;
 
-          // If it's too close to white, we use gray for subsititution
-          if (brightness > 235) {
-              lv_obj_set_style_bg_color(id(light_slider), lv_color_hex(0xE1E1E1), LV_PART_INDICATOR);
-              lv_obj_set_style_bg_color(id(light_slider), lv_color_hex(0xF9F9F9), LV_PART_MAIN);
+            float rad = hsv.h * M_PI / 180.0f;
+            float s = hsv.s / 100.0f;
+
+            int x = (int)(cosf(rad) * s * radius);
+            int y = (int)(sinf(rad) * s * radius);
+
+            lv_obj_set_pos(id(color_palette_indicator), x, y);
+            lv_obj_set_style_bg_color(id(color_palette_indicator), update_color, LV_STATE_DEFAULT);
+            
+            // Give the slider proper color like in Home Assistant
+            float brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+
+            // If it's too close to white, we use gray for substitution
+            if (brightness > 235) {
+                lv_obj_set_style_bg_color(id(light_slider), lv_color_hex(0xE1E1E1), LV_PART_INDICATOR);
+                lv_obj_set_style_bg_color(id(light_slider), lv_color_hex(0xF9F9F9), LV_PART_MAIN);
+            } else {
+              lv_obj_set_style_bg_color(id(light_slider), update_color, LV_PART_INDICATOR);
+              // a fade background
+              float factor = 0.85;
+              uint8_t bg_r = r + (255 - r) * factor;
+              uint8_t bg_g = g + (255 - g) * factor;
+              uint8_t bg_b = b + (255 - b) * factor;
+              lv_color_t bar_bg = lv_color_make(bg_r, bg_g, bg_b);
+              lv_obj_set_style_bg_color(id(light_slider), bar_bg, LV_PART_MAIN);
+            }
+
+            id(light_r) = r;
+            id(light_g) = g;
+            id(light_b) = b;
+            
+            ESP_LOGD("sync_ha_palette", "Color palette synced successfully");
           } else {
-            lv_obj_set_style_bg_color(id(light_slider), update_color, LV_PART_INDICATOR);
-            // a fade background
-            float factor = 0.85;
-            uint8_t bg_r = r + (255 - r) * factor;
-            uint8_t bg_g = g + (255 - g) * factor;
-            uint8_t bg_b = b + (255 - b) * factor;
-            lv_color_t bar_bg = lv_color_make(bg_r, bg_g, bg_b);
-            lv_obj_set_style_bg_color(id(light_slider), bar_bg, LV_PART_MAIN);
+            ESP_LOGW("sync_ha_palette", "Failed to parse color string: %s", clean.c_str());
           }
-
-          
-          id(light_r) = r;
-          id(light_g) = g;
-          id(light_b) = b;
 
   - id: update_arc_color
     parameters:
