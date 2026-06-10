@@ -35,9 +35,15 @@ esphome:
   name: ${name}
   friendly_name: ${friendly_name}
   min_version: 2025.12.0
+  compile_process_limit: 1
   platformio_options:
     build_flags:
-      - "-j1"  # only 1 parallel job
+      - -DCORE_DEBUG_LEVEL=0
+      - -fno-exceptions  # Disable C++ exceptions to save RAM
+      - -ffunction-sections
+      - -fdata-sections
+    build_unflags:
+      - -fexceptions
   on_boot:
     priority: -100
     then:
@@ -63,27 +69,27 @@ packages:
     url: https://github.com/dmoo500/esphome-tab5-v2-sendspin
     file: common/tab5-v2-globals.yaml
     ref: main
-    refresh: 1d
+    refresh: 7d
   remote_fonts:
     url: https://github.com/dmoo500/esphome-tab5-v2-sendspin
     file: common/tab5-v2-fonts.yaml
     ref: main
-    refresh: 1d
+    refresh: 7d
   remote_images:
     url: https://github.com/dmoo500/esphome-tab5-v2-sendspin
     file: common/tab5-v2-images.yaml
     ref: main
-    refresh: 1d
+    refresh: 7d
   remote_lvgl:
     url: https://github.com/dmoo500/esphome-tab5-v2-sendspin
     file: common/tab5-v2-lvgl.yaml
     ref: main
-    refresh: 1d
+    refresh: 7d
   remote_scripts:
     url: https://github.com/dmoo500/esphome-tab5-v2-sendspin
     file: common/tab5-v2-scripts.yaml
     ref: main
-    refresh: 1d
+    refresh: 7d
 
 esp32_hosted:
   variant: esp32c6
