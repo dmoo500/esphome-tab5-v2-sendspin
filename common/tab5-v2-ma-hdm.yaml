@@ -19,6 +19,11 @@ substitutions:
   ui_phase_now_playing: "2"
   ui_phase_playlist_menu: "3"
 
+  light_entity: light.licht_4
+  climate_entity: climate.hmip_wth_1_003922699b2ba1
+  temperature_sensor: sensor.hmip_wth_1_003922699b2ba1_temperatur
+  humidity_sensor: sensor.hmip_wth_1_003922699b2ba1_luftfeuchtigkeit
+
 external_components:
   - source:
       type: local
@@ -50,17 +55,10 @@ esp32:
       CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_360: "y"
       CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ: "360"
 
-packages:
-  - !include common/tab5-v2-globals.yaml
-  - !include common/tab5-v2-fonts.yaml
-  - !include common/tab5-v2-images.yaml
-  - !include common/tab5-v2-lvgl.yaml
-  - !include common/tab5-v2-scripts.yaml
-
-#  remote_package_files:
-#      url: https://github.com/dmpp500/esphome-tab5-v2-sendspin
-#      files: [ common/tab5-globals.yaml, common/tab5-globals.yaml, common/tab5-scripts.yaml]
-#      refresh: 1d
+  remote_package_files:
+      url: https://github.com/dmpp500/esphome-tab5-v2-sendspin
+      files: [ ccommon/tab5-v2-globals.yaml, common/tab5-v2-fonts.yaml, common/tab5-v2-images.yaml, common/tab5-v2-lvgl.yaml, common/tab5-v2-scripts.yaml ]
+      refresh: 1d
 
 esp32_hosted:
   variant: esp32c6
@@ -355,7 +353,7 @@ sensor:
   
   - platform: homeassistant
     id: cur_temp
-    entity_id: sensor.hmip_wth_1_003922699b2ba1_temperatur
+    entity_id: ${temperature_sensor}
     on_value:
       - lvgl.label.update:
           id: temp_label
@@ -365,7 +363,7 @@ sensor:
   
   - platform: homeassistant
     id: cur_humi
-    entity_id: sensor.hmip_wth_1_003922699b2ba1_luftfeuchtigkeit
+    entity_id: ${humidity_sensor}
     on_value:
       - lvgl.label.update:
           id: humi_label
@@ -756,20 +754,20 @@ time:
 
 text_sensor:
   - platform: homeassistant
-    id: demo_light
-    entity_id: light.licht_4
+    id: light_state
+    entity_id: ${light_entity}
     on_value:
       then:
         - lvgl.widget.update:
-            id: demo_light_btn
+            id: light_btn
             state:
               checked: !lambda return x == "on";
               disabled: !lambda return ( x == "unavailable" ) or ( x == "unknown" );
         - lvgl.widget.update:
-            id: demo_light_click_area
+            id: light_click_area
             clickable: !lambda return !((x == "unavailable") || (x == "unknown"));
         - lvgl.label.update:
-            id: demo_light_label
+            id: light_label
             text_color: !lambda |-
               if ( x == "on" ) {
                   return lv_color_hex(0xF5C23B);
@@ -787,7 +785,7 @@ text_sensor:
                 snprintf(buf, sizeof(buf), "%s", icon.c_str());
                 return buf;
         - lvgl.label.update:
-            id: demo_light_status
+            id: light_status
             text: !lambda |-
                 static char buf[10];
                 std::string text;
@@ -804,8 +802,8 @@ text_sensor:
                 return buf;
 
   - platform: homeassistant
-    id: demo_light_brightness
-    entity_id: light.licht_4 
+    id: light_brightness
+    entity_id: ${light_entity} 
     attribute: brightness
     on_value:
       - lvgl.slider.update:
@@ -833,15 +831,15 @@ text_sensor:
             }
   
   - platform: homeassistant
-    id: demo_light_color
-    entity_id: light.licht_4 
+    id: light_color
+    entity_id: ${light_entity} 
     attribute: rgb_color
     on_value:
       - lambda: id(sync_ha_palette)->execute(x);
   
   - platform: homeassistant
     id: ac_temp
-    entity_id: climate.hmip_wth_1_003922699b2ba1
+    entity_id: ${climate_entity}
     attribute: temperature
     on_value:
       - lvgl.spinbox.update:

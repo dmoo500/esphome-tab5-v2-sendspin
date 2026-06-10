@@ -452,7 +452,7 @@ script:
       - homeassistant.action:
           action: climate.set_hvac_mode
           data:
-            entity_id: climate.hmip_wth_1_003922699b2ba1
+            entity_id: ${climate_entity}
             hvac_mode: !lambda return id(hvac_state_table)[ac_mode_idx];
   - id: set_ac_fan_mode
     parameters:
@@ -461,7 +461,7 @@ script:
       - homeassistant.action:
           action: climate.set_fan_mode
           data:
-            entity_id: climate.hmip_wth_1_003922699b2ba1
+            entity_id: ${climate_entity}
             fan_mode: !lambda return id(fan_modes_table)[ac_fan_mode_idx];
   # This script was used on spinbox/arc widget
   # to set the temperature to climate entity
@@ -473,7 +473,7 @@ script:
       - homeassistant.action:
           action: climate.set_temperature
           data:
-            entity_id: climate.hmip_wth_1_003922699b2ba1
+            entity_id: ${climate_entity}
             temperature: !lambda return temp_value;
 
 # sendspin script

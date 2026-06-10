@@ -353,7 +353,7 @@ lvgl:
                         - homeassistant.action:
                             action: light.turn_on
                             data:
-                              entity_id: light.licht_4
+                              entity_id: ${light_entity}
                               brightness: !lambda return int(x);
                         - lvgl.label.update:
                             id: light_bright_label
@@ -390,12 +390,11 @@ lvgl:
                         - homeassistant.action:
                             action: light.turn_on
                             data:
-                              entity_id: light.licht_4
+                              entity_id: ${light_entity}
                               # The RGB values are from global variables
                               # which comes from the indicator
-                              red: !lambda return std::to_string(id(light_r));
-                              green: !lambda return std::to_string(id(light_g));
-                              blue: !lambda return std::to_string(id(light_b));
+                              rgb_color: !lambda |-
+                                return {id(light_r), id(light_g), id(light_b)};
 
                   # Indicator, also make it draggable
                   - obj:
@@ -416,12 +415,11 @@ lvgl:
                         - homeassistant.action:
                             action: light.turn_on
                             data:
-                              entity_id: light.licht_4
+                              entity_id: ${light_entity}
                               # The RGB values are from global variables
                               # which comes from the indicator
-                              red: !lambda return std::to_string(id(light_r));
-                              green: !lambda return std::to_string(id(light_g));
-                              blue: !lambda return std::to_string(id(light_b));
+                              rgb_color: !lambda |-
+                                return {id(light_r), id(light_g), id(light_b)};
  
                       
                   # Button group
@@ -440,7 +438,7 @@ lvgl:
                         flex_align_track: CENTER
                       widgets:
                         - button:
-                            id: demo_light_pwr_btn
+                            id: light_pwr_btn
                             styles: card_md_icon_btn
                             bg_opa: TRANSP
                             widgets:
@@ -454,7 +452,7 @@ lvgl:
                               - homeassistant.action:
                                   action: light.toggle
                                   data:
-                                    entity_id: light.licht_4
+                                    entity_id: ${light_entity}
                         - button:
                             id: bright_ctrl_btn
                             styles: card_md_icon_btn
@@ -564,7 +562,7 @@ lvgl:
                             else 
                               lv_arc_set_value(id(ac_arc), x - mod);
                         - lvgl.label.update:
-                            id: demo_ac_temp
+                            id: ac_temp
                             text:
                               format: "%.1f °C"
                               args: [ 'float(lv_arc_get_value(id(ac_arc))) / 10.0f' ]
@@ -576,12 +574,12 @@ lvgl:
 
                   - label:
                       text_font: montserrat_24
-                      id: demo_ac_state
+                      id: ac_state
                       text: "OFF"
                       align: CENTER
                       y: -80
                   - label:
-                      id: demo_ac_temp
+                      id: ac_temp
                       text_font: montserrat_48
                       text: "18.0 °C"
                       align: CENTER
@@ -618,7 +616,7 @@ lvgl:
                                   id: ac_arc
                                   value: !lambda return lv_arc_get_value(id(ac_arc)) - 5.0f;
                               - lvgl.label.update:
-                                  id: demo_ac_temp
+                                  id: ac_temp
                                   text:
                                     format: "%.1f °C"
                                     args: [ 'float(lv_arc_get_value(id(ac_arc))) / 10.0f' ]
@@ -643,7 +641,7 @@ lvgl:
                                   id: ac_arc
                                   value: !lambda return lv_arc_get_value(id(ac_arc)) + 5.0f;
                               - lvgl.label.update:
-                                  id: demo_ac_temp
+                                  id: ac_temp
                                   text:
                                     format: "%.1f °C"
                                     args: [ 'float(lv_arc_get_value(id(ac_arc))) / 10.0f' ]
@@ -700,7 +698,7 @@ lvgl:
                             on_change:
                               - lambda: id(update_arc_color)->execute(x);
                               - lvgl.label.update:
-                                  id: demo_ac_state
+                                  id: ac_state
                                   text: !lambda |-
                                     char buf[16];
                                     lv_dropdown_get_selected_str(id(ac_mode_dd).obj, buf, sizeof(buf));
@@ -800,7 +798,7 @@ lvgl:
                   grid_cell_row_pos: 0
                   grid_cell_column_pos: 0
               - obj:
-                  id: demo_light_click_area
+                  id: light_click_area
                   styles: card_sm
                   grid_cell_row_pos: 1
                   grid_cell_column_pos: 0
@@ -815,7 +813,7 @@ lvgl:
                   widgets:
                     - button:
                         styles: card_sm_icon_btn
-                        id: demo_light_btn
+                        id: light_btn
                         checkable: true
                         state:
                           checked: false
@@ -823,7 +821,7 @@ lvgl:
                           bg_color: 0xFDF3D8    # Dim yellow
                         widgets:
                           - label:
-                              id: demo_light_label
+                              id: light_label
                               text_font: extra_icon
                               text_color: 0X9E9E9E
                               text: "\U000F18DE"
@@ -833,14 +831,14 @@ lvgl:
                           - homeassistant.action:
                               action: light.toggle
                               data:
-                                entity_id: light.licht_4
+                                entity_id: ${light_entity}
 
                     - label:
                         styles: card_sm_main_label
                         text: "Wohnzimmer"
                     - label:
                         styles: card_sm_sub_label
-                        id: demo_light_status
+                        id: light_status
                         text: "OFF"
         - label:
             x: 220
@@ -941,7 +939,7 @@ lvgl:
                                 - lambda: |-
                                     lv_arc_set_value(id(ac_arc), x * 10);
                                 - lvgl.label.update:
-                                    id: demo_ac_temp
+                                    id: ac_temp
                                     text:
                                       format: "%.1f °C"
                                       args: [ 'x' ]
