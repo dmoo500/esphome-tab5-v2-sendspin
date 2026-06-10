@@ -48,7 +48,12 @@ ESPHome configuration for M5Stack Tab5 with Sendspin media player integration.
    wifi_password: "YourWiFiPassword"
    ```
 
-2. Compile and upload with ESPHome:
+2. **Important**: After first boot, set the DAC Output to `LINE1` for onboard speaker audio:
+   - In Home Assistant, find the device
+   - Change the "DAC Output" select entity from `HEADPHONE` to `LINE1`
+   - This must be done manually via the UI or an automation
+
+3. Compile and upload with ESPHome:
    ```bash
    esphome run tab5-v2-ma-hdm.yaml
    ```

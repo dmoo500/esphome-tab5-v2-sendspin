@@ -6,8 +6,8 @@ substitutions:
   imagemodel1: "Gwen" # options are: below
   imagemodel2: "Alfred" # options are below
 
-  imagewidth:  "360"
-  imageheight: "360"
+  imagewidth:  "420"
+  imageheight: "420"
 
   screenwidth:  "1280"
   screenheight: "780"

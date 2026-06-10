@@ -136,3 +136,7 @@ globals:
     type: int
     restore_value: yes
     initial_value: "0"
+  - id: is_muted
+    type: bool
+    restore_value: no
+    initial_value: "false"

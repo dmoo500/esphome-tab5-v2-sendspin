@@ -727,7 +727,21 @@ script:
           condition:
             lambda: 'return !id(touch_swipe_detected);'
           then:
-            - media_player.mute: external_media_player
+            - if:
+                condition:
+                  lambda: 'return id(is_muted);'
+                then:
+                  - media_player.unmute: external_media_player
+                  - lambda: 'id(is_muted) = false;'
+                  - lvgl.label.update:
+                      id: controls_mute_icon
+                      text: "\U000F075D"  # volume-high icon
+                else:
+                  - media_player.mute: external_media_player
+                  - lambda: 'id(is_muted) = true;'
+                  - lvgl.label.update:
+                      id: controls_mute_icon
+                      text: "\U000F075F"  # volume-off icon
             - script.execute: player_controls_keep_open
 
   - id: player_controls_slide_to_now_playing
