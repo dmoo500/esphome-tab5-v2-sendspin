@@ -391,10 +391,9 @@ lvgl:
                             action: light.turn_on
                             data:
                               entity_id: ${light_entity}
-                              # The RGB values are from global variables
-                              # which comes from the indicator
-                              rgb_color: !lambda |-
-                                return std::vector<int>{id(light_r), id(light_g), id(light_b)};
+                              red: !lambda return id(light_r);
+                              green: !lambda return id(light_g);
+                              blue: !lambda return id(light_b);
 
                   # Indicator, also make it draggable
                   - obj:
@@ -416,10 +415,9 @@ lvgl:
                             action: light.turn_on
                             data:
                               entity_id: ${light_entity}
-                              # The RGB values are from global variables
-                              # which comes from the indicator
-                              rgb_color: !lambda |-
-                                return std::vector<int>{id(light_r), id(light_g), id(light_b)};
+                              red: !lambda return id(light_r);
+                              green: !lambda return id(light_g);
+                              blue: !lambda return id(light_b);
  
                       
                   # Button group
