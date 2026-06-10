@@ -562,7 +562,7 @@ lvgl:
                             else 
                               lv_arc_set_value(id(ac_arc), x - mod);
                         - lvgl.label.update:
-                            id: ac_temp
+                            id: ac_temp_label
                             text:
                               format: "%.1f °C"
                               args: [ 'float(lv_arc_get_value(id(ac_arc))) / 10.0f' ]
@@ -579,7 +579,7 @@ lvgl:
                       align: CENTER
                       y: -80
                   - label:
-                      id: ac_temp
+                      id: ac_temp_label
                       text_font: montserrat_48
                       text: "18.0 °C"
                       align: CENTER
@@ -616,7 +616,7 @@ lvgl:
                                   id: ac_arc
                                   value: !lambda return lv_arc_get_value(id(ac_arc)) - 5.0f;
                               - lvgl.label.update:
-                                  id: ac_temp
+                                  id: ac_temp_label
                                   text:
                                     format: "%.1f °C"
                                     args: [ 'float(lv_arc_get_value(id(ac_arc))) / 10.0f' ]
@@ -641,7 +641,7 @@ lvgl:
                                   id: ac_arc
                                   value: !lambda return lv_arc_get_value(id(ac_arc)) + 5.0f;
                               - lvgl.label.update:
-                                  id: ac_temp
+                                  id: ac_temp_label
                                   text:
                                     format: "%.1f °C"
                                     args: [ 'float(lv_arc_get_value(id(ac_arc))) / 10.0f' ]
@@ -939,7 +939,7 @@ lvgl:
                                 - lambda: |-
                                     lv_arc_set_value(id(ac_arc), x * 10);
                                 - lvgl.label.update:
-                                    id: ac_temp
+                                    id: ac_temp_label
                                     text:
                                       format: "%.1f °C"
                                       args: [ 'x' ]
