@@ -150,6 +150,8 @@ font:
       - "\U000F040E"
       - "\U000F04AD"
       - "\U000F04AE"
+      - "\U000F04C3"  # speaker (simple speaker without waves)
+      - "\U000F0580"  # volume-low
       - "\U000F075D"
       - "\U000F075E"
       - "\U000F075F"

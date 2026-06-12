@@ -1,62 +1,34 @@
+substitutions:
+  imagemodel: "Gwen"  # Default fallback, can be overridden in main config
+  imageheight: "720"  # Default fallback, can be overridden in main config
+
 image:
-### model 1
-  - file: https://raw.githubusercontent.com/RealDeco/xiaozhi-esphome/main/images/${imagemodel1}/360x360/playing.png
+  - file: https://raw.githubusercontent.com/RealDeco/xiaozhi-esphome/main/images/${imagemodel}/360x360/playing.png
     id: fallback_playing_image1
     resize: ${imageheight}x${imageheight}
     type: RGB565
     dither: NONE
 
-  - file: https://raw.githubusercontent.com/RealDeco/xiaozhi-esphome/main/images/${imagemodel1}/360x360/idle.png
+  - file: https://raw.githubusercontent.com/RealDeco/xiaozhi-esphome/main/images/${imagemodel}/360x360/idle.png
     id: va_waiting_image1
     resize: ${imageheight}x${imageheight}
     type: RGB565
     dither: NONE
 
-  - file: https://raw.githubusercontent.com/RealDeco/xiaozhi-esphome/main/images/${imagemodel1}/360x360/listening.png
+  - file: https://raw.githubusercontent.com/RealDeco/xiaozhi-esphome/main/images/${imagemodel}/360x360/listening.png
     id: va_listening_image1
     resize: ${imageheight}x${imageheight}
     type: RGB565
     dither: NONE
 
-  - file: https://raw.githubusercontent.com/RealDeco/xiaozhi-esphome/main/images/${imagemodel1}/360x360/thinking.png
+  - file: https://raw.githubusercontent.com/RealDeco/xiaozhi-esphome/main/images/${imagemodel}/360x360/thinking.png
     id: va_thinking_image1
     resize: ${imageheight}x${imageheight}
     type: RGB565
     dither: NONE
 
-  - file: https://raw.githubusercontent.com/RealDeco/xiaozhi-esphome/main/images/${imagemodel1}/360x360/replying.png
+  - file: https://raw.githubusercontent.com/RealDeco/xiaozhi-esphome/main/images/${imagemodel}/360x360/replying.png
     id: va_replying_image1
-    resize: ${imageheight}x${imageheight}
-    type: RGB565
-    dither: NONE
-
-### model 2
-  - file: https://raw.githubusercontent.com/RealDeco/xiaozhi-esphome/main/images/${imagemodel2}/360x360/playing.png
-    id: fallback_playing_image2
-    resize: ${imageheight}x${imageheight}
-    type: RGB565
-    dither: NONE
-
-  - file: https://raw.githubusercontent.com/RealDeco/xiaozhi-esphome/main/images/${imagemodel2}/360x360/idle.png
-    id: va_waiting_image2
-    resize: ${imageheight}x${imageheight}
-    type: RGB565
-    dither: NONE
-
-  - file: https://raw.githubusercontent.com/RealDeco/xiaozhi-esphome/main/images/${imagemodel2}/360x360/listening.png
-    id: va_listening_image2
-    resize: ${imageheight}x${imageheight}
-    type: RGB565
-    dither: NONE
-
-  - file: https://raw.githubusercontent.com/RealDeco/xiaozhi-esphome/main/images/${imagemodel2}/360x360/thinking.png
-    id: va_thinking_image2
-    resize: ${imageheight}x${imageheight}
-    type: RGB565
-    dither: NONE
-
-  - file: https://raw.githubusercontent.com/RealDeco/xiaozhi-esphome/main/images/${imagemodel2}/360x360/replying.png
-    id: va_replying_image2
     resize: ${imageheight}x${imageheight}
     type: RGB565
     dither: NONE

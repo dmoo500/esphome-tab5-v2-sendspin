@@ -140,3 +140,7 @@ globals:
     type: bool
     restore_value: no
     initial_value: "false"
+  - id: saved_volume
+    type: float
+    restore_value: no
+    initial_value: "0.6"
